@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>💖 Para Ti</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Quicksand:wght@300;400;600&display=swap');
+
+    :root {
+      --pink:      #ff6b9d;
+      --deep-pink: #c9184a;
+      --dark:      #2d0015;
+    }
+
+    * { margin:0; padding:0; box-sizing:border-box; }
+
+    body {
+      font-family: 'Quicksand', sans-serif;
+      overflow: hidden;
+      height: 100vh; width: 100vw;
+      background: #0a0010;
+    }
+
+    /* ── MUSIC CONTROL BUTTON ─────────────────────────────────────── */
+    .music-btn {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: rgba(255, 107, 157, 0.9);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      color: white;
+      font-size: 1.5rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(199, 24, 74, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .music-btn:hover {
+      transform: scale(1.1);
+      background: rgba(199, 24, 74, 0.9);
+    }
+    .music-btn.muted {
+      background: rgba(100, 100, 100, 0.7);
+    }
+
+    /* ── SECTION MANAGER ─────────────────────────────────────────── */
+    .section {
+      position: fixed; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      transition: opacity 0.9s ease;
+    }
+    .section.hidden  { opacity:0; pointer-events:none; }
+    .section.visible { opacity:1; pointer-events:all; }
+
+    /* ── FLOATING HEARTS ──────────────────────────────────────────── */
+    .hearts-bg { position:fixed; inset:0; pointer-events:none; overflow:hidden; z-index:0; }
+    .hp {
+      position:absolute; bottom:-30px;
+      animation: floatUp linear infinite; opacity:.18;
+    }
+    @keyframes floatUp {
+      0%   { transform:translateY(0) rotate(0deg);    opacity:.22; }
+      100% { transform:translateY(-110vh) rotate(360deg); opacity:0; }
+    }
+
+    /* ================================================================
+       SECTION 1 — SLIDESHOW (replaces flipbook)
+    ================================================================ */
+    #s1 {
+      background: linear-gradient(135deg,#fff0f5 0%,#ffd6e7 55%,#ffb3c6 100%);
+      flex-direction: column;
+      gap: 22px;
+      z-index: 1;
+    }
+
+    .slideshow-container {
+      position: relative;
+      width: 600px;
+      max-width: 90vw;
+      height: 500px;
+      max-height: 70vh;
+    }
+
+    /* Individual slide/card */
+    .slide {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 44px 36px;
+      text-align: center;
+      border-radius: 20px;
+      box-shadow: 0 8px 40px rgba(0,0,0,.2);
+      opacity: 0;
+      transform: scale(0.9) translateY(20px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+      pointer-events: none;
+    }
+
+    .slide.active {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+      pointer-events: all;
+    }
+
+    /* Slide colors */
+    .slide-0 { background: linear-gradient(145deg,#ff6b9d,#c9184a); }
+    .slide-1 { background: linear-gradient(145deg,#ffe4f0,#ffc2d9); }
+    .slide-2 { background: linear-gradient(145deg,#ffd6e7,#ffadc5); }
+    .slide-3 { background: linear-gradient(145deg,#ffc8dd,#ff9abe); }
+    .slide-4 { background: linear-gradient(145deg,#ffb3c6,#ff85a1); }
+    .slide-5 { background: linear-gradient(145deg,#ff85a1,#ff4d72); }
+    .slide-6 { background: linear-gradient(145deg,#ff6b9d,#c9184a); }
+    .slide-7 { background: linear-gradient(145deg,#800f2f,#590d22); }
+
+    /* Text colors */
+    .slide-1 .pt, .slide-2 .pt, .slide-3 .pt, .slide-4 .pt { color: #4a0020; }
+    .slide-1 .ph, .slide-2 .ph, .slide-3 .ph, .slide-4 .ph { color: var(--dark); }
+
+    .slide-0 .pt, .slide-5 .pt, .slide-6 .pt, .slide-7 .pt { color: rgba(255,255,255,.88); }
+    .slide-0 .ph, .slide-5 .ph, .slide-6 .ph, .slide-7 .ph { color: #fff; }
+
+    .pe { font-size:3.6rem; margin-bottom:14px; }
+    .ph {
+      font-family:'Dancing Script',cursive;
+      font-size:2.2rem; margin-bottom:12px; line-height:1.25;
+    }
+    .pt { font-size:.98rem; line-height:1.75; max-width:400px; }
+    .cover-big { font-size:2.8rem !important; }
+
+    /* Image support */
+    .slide-img {
+      max-width: 85%;
+      max-height: 220px;
+      border-radius: 12px;
+      margin: 16px 0;
+      object-fit: cover;
+      box-shadow: 0 4px 12px rgba(0,0,0,.25);
+    }
+
+    @keyframes pulse {
+      0%,100%{ transform:scale(1); }
+      50%    { transform:scale(1.13); }
+    }
+
+    /* ── Navigation dots ── */
+    .dots-container {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+      z-index: 2;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: rgba(199,24,74,.3);
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .dot.active {
+      background: var(--deep-pink);
+      transform: scale(1.3);
+    }
+
+    .dot:hover {
+      background: rgba(199,24,74,.6);
+    }
+
+    /* ── Controls ── */
+    .slide-controls {
+      display:flex; gap:18px; align-items:center; z-index:2;
+      margin-top: 16px;
+    }
+    .sbtn {
+      background: var(--deep-pink); color:#fff; border:none;
+      border-radius:50px; padding:11px 30px;
+      font-family:'Quicksand',sans-serif; font-size:.95rem; font-weight:700;
+      cursor:pointer; transition:all .2s;
+      box-shadow:0 4px 16px rgba(199,24,74,.3);
+    }
+    .sbtn:hover  { transform:translateY(-2px); box-shadow:0 6px 22px rgba(199,24,74,.45); }
+    .sbtn:active { transform:none; }
+    .sbtn:disabled { opacity:.28; cursor:not-allowed; transform:none; box-shadow:none; }
+    
+    #slide-ind {
+      font-size:.85rem; color:var(--deep-pink); font-weight:700;
+      min-width:90px; text-align:center; letter-spacing:.5px;
+    }
+
+    #proceed-btn {
+      display:none;
+      background:linear-gradient(135deg,#ff6b9d,#c9184a);
+      color:#fff; border:none; border-radius:50px;
+      padding:15px 40px;
+      font-family:'Dancing Script',cursive; font-size:1.5rem;
+      cursor:pointer; transition:transform .2s; z-index:2;
+      box-shadow:0 6px 28px rgba(199,24,74,.45);
+      animation:glowPulse 2s ease-in-out infinite;
+      margin-top: 16px;
+    }
+    #proceed-btn:hover { transform:scale(1.06); }
+    @keyframes glowPulse {
+      0%,100%{ box-shadow:0 6px 28px rgba(199,24,74,.45); }
+      50%    { box-shadow:0 6px 44px rgba(199,24,74,.78); }
+    }
+
+    /* ================================================================
+       SECTION 2 — 3D HEART with zoom-in transition
+    ================================================================ */
+    #s2 { background:#0a0010; flex-direction:column; z-index:1; }
+
+    #heart-canvas {
+      position:absolute; inset:0;
+      width:100%; height:100%;
+      cursor:grab;
+    }
+    #heart-canvas:active { cursor:grabbing; }
+
+    #heart-overlay {
+      position:absolute; inset:0; z-index:15;
+      background: #0a0010;
+      opacity:0; pointer-events:none;
+      transition: opacity 1s ease;
+    }
+    #heart-overlay.zooming { opacity:1; pointer-events:all; }
+
+    .heart-progress {
+      position: absolute;
+      bottom: 32px; left: 50%; transform: translateX(-50%);
+      z-index: 10; pointer-events: none;
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+    }
+    .heart-progress-bar {
+      width: 160px; height: 4px;
+      background: rgba(255,107,157,0.2);
+      border-radius: 2px; overflow: hidden;
+    }
+    .heart-progress-fill {
+      height: 100%;
+      background: linear-gradient(to right, #ff6b9d, #c9184a);
+      border-radius: 2px;
+      width: 0%;
+      transition: width 0.1s ease;
+    }
+    .heart-progress-label {
+      font-size: 0.7rem; letter-spacing: 2px;
+      color: rgba(255,154,190,0.4); text-transform: uppercase;
+    }
+
+    .heart-ui {
+      position:relative; z-index:10;
+      text-align:center; pointer-events:none;
+      margin-top:64vh;
+    }
+    .heart-q {
+      font-family:'Dancing Script',cursive; font-size:2.8rem;
+      color:#ff9abe; text-shadow:0 0 30px rgba(255,107,157,.6);
+      margin-bottom:8px;
+    }
+    .heart-hint {
+      color:rgba(255,154,190,.5); font-size:.82rem;
+      letter-spacing:2.5px; text-transform:uppercase;
+    }
+
+    /* ================================================================
+       SECTION 3 — YES / NO
+    ================================================================ */
+    #s3 {
+      background:linear-gradient(135deg,#0a0010 0%,#1a0020 50%,#2d0035 100%);
+      flex-direction:column; z-index:1;
+    }
+
+    .yesno-card {
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,107,157,.2); border-radius:30px;
+      padding:52px 56px; text-align:center; max-width:500px;
+      backdrop-filter:blur(12px);
+      box-shadow:0 0 90px rgba(255,107,157,.09);
+    }
+    .yesno-card.animated {
+      animation: cardEntrance 0.8s cubic-bezier(0.34,1.56,0.64,1) both;
+    }
+    @keyframes cardEntrance {
+      from { transform:scale(0.4) translateY(40px); opacity:0; }
+      to   { transform:scale(1)   translateY(0);    opacity:1; }
+    }
+
+    .yn-hearts {
+      font-size:2.8rem; margin-bottom:22px;
+      animation:pulse 2s ease-in-out infinite; display:block;
+    }
+    .yn-q {
+      font-family:'Dancing Script',cursive; font-size:2.6rem;
+      color:#ff9abe; margin-bottom:14px;
+      text-shadow:0 0 22px rgba(255,107,157,.4);
+    }
+    .yn-sub {
+      color:rgba(255,154,190,.55); font-size:.95rem;
+      margin-bottom:38px; line-height:1.65;
+    }
+    .yn-btns {
+      display:flex; gap:22px; justify-content:center;
+      align-items:center; position:relative; min-height:60px;
+    }
+    #yes-btn {
+      background:linear-gradient(135deg,#ff6b9d,#c9184a);
+      color:#fff; border:none; border-radius:50px; padding:17px 48px;
+      font-family:'Dancing Script',cursive; font-size:1.6rem;
+      cursor:pointer; transition:all .2s;
+      box-shadow:0 4px 22px rgba(199,24,74,.45);
+    }
+    #yes-btn:hover { transform:scale(1.09); box-shadow:0 7px 32px rgba(199,24,74,.65); }
+    #no-btn {
+      background:rgba(255,255,255,.07);
+      color:rgba(255,154,190,.65);
+      border:1px solid rgba(255,107,157,.18); border-radius:50px;
+      padding:17px 38px; font-family:'Quicksand',sans-serif;
+      font-size:1rem; font-weight:600; cursor:pointer;
+      transition:transform .35s cubic-bezier(.34,1.56,.64,1);
+      position:relative;
+    }
+
+    #celebration { display:none; text-align:center; }
+    #celebration.show { display:block; }
+    .cel-emoji {
+      font-size:5.5rem; display:block; margin-bottom:16px;
+      animation:bounceIn .6s cubic-bezier(.34,1.56,.64,1);
+    }
+    .cel-text {
+      font-family:'Dancing Script',cursive; font-size:3.2rem;
+      color:#ff9abe; text-shadow:0 0 30px rgba(255,107,157,.7);
+      animation:bounceIn .5s .1s cubic-bezier(.34,1.56,.64,1) both;
+    }
+    .cel-sub {
+      color:rgba(255,154,190,.65); margin-top:14px; font-size:1rem;
+      animation:bounceIn .5s .25s both;
+    }
+    @keyframes bounceIn {
+      from { transform:scale(0); opacity:0; }
+      to   { transform:scale(1); opacity:1; }
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 640px) {
+      .slideshow-container {
+        width: 90vw;
+        height: 60vh;
+      }
+      .ph { font-size: 1.8rem; }
+      .pt { font-size: 0.85rem; }
+      .pe { font-size: 2.8rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       BACKGROUND MUSIC 
+       
+       HOW TO ADD YOUR SONG:
+       1. Save your MP3 file in the same folder as this HTML file
+       2. Replace "your-song.mp3" below with your actual filename
+       Example: If your file is named "love-song.mp3", change to:
+       <source src="love-song.mp3" type="audio/mpeg">
+  ══════════════════════════════════════════════════════════════ -->
+  <audio id="bgMusic" loop>
+    <source src="Shawn Mendes - Crazy (Official Audio).mp3" type="audio/mpeg">
+    <source src="your-song.ogg" type="audio/ogg">
+  </audio>
+
+  <!-- Music Control Button (click to play/pause) -->
+  <button id="music-toggle" class="music-btn" title="Click to play music">
+    🔇
+  </button>
+
+  <div class="hearts-bg" id="hearts-bg"></div>
+
+  <!-- ================================================================
+       SECTION 1 — SLIDESHOW (smooth transitions)
+  ================================================================ -->
+  <div class="section visible" id="s1">
+
+    <div class="slideshow-container">
+      
+      <!-- Slide 0: Cover -->
+      <div class="slide slide-0 active">
+        <div class="pe" style="animation:pulse 1.5s ease-in-out infinite;">💌</div>
+        <div class="ph cover-big">Hola juanota</div>
+        <div class="pt">Se q ahorita no estoy ahi y q mereces mas q una paginita cucha pero queria darte algo lindo<br/><br/>dale click pa continuar porfi </div>
+        <img src="WhatsApp Image 2026-02-03 at 22.25.16.jpeg" alt="Cover" class="slide-img">
+      </div>
+
+      <!-- Slide 1 -->
+       <div class="slide slide-1">
+        <div class="pe">🎵</div>
+        <div class="ph">si no lo haz hecho</div>
+        <!-- TO ADD IMAGE: <img src="page4.jpg" alt="Music" class="slide-img"> -->
+        <div class="pt">le puse una cancion a esto pa q veas q pro, dale click a la bocinita</div>
+      </div>
+
+       <div class="slide slide-2">
+        <div class="pe">💫</div>
+        <div class="ph">eres verdaderamente</div>
+        <img src="WhatsApp Image 2026-02-12 at 22.56.16 (1).jpeg" alt="My world" class="slide-img"> 
+        <div class="pt">algn muy valiosa, chistosa e increible, no puedo esperar a llenar mi galeria de fotos de ti y mi vida de recuerdos contigo (presentame a mashi)</div>
+      </div>
+      
+
+    
+      <!-- Slide 3 -->
+      <div class="slide slide-3">
+        <div class="pe">🌹</div>
+        <div class="ph">sinceramente</div>
+        <!-- TO ADD IMAGE: <img src="page3.jpg" alt="Our memories" class="slide-img"> -->
+        <div class="pt">creo que nunca he tenido un mal momento contigo, ni por msj ni en persona ni llamada</div>
+      </div>
+
+  <!-- Slide 2 -->
+      <div class="slide slide-2">
+        <div class="pe">✨</div>
+        <div class="ph">Tus ojos</div>
+       <img src="WhatsApp Image 2026-02-12 at 10.36.01.jpeg" alt="Your smile" class="slide-img">
+        <div class="pt">tu cintura, tu sonrisa, tus cachetes, creo q eres la persona mas preciosa que he visto</div>
+      </div>
+
+      <!-- Slide 4 -->
+      
+
+      <!-- Slide 5 -->
+      <div class="slide slide-5">
+        <div class="pe">🌸</div>
+        <div class="ph">Se q es raro como nos conocimos</div>
+        <!-- TO ADD IMAGE: <img src="page1.jpg" alt="Us together" class="slide-img"> -->
+        <div class="pt">pero sinceramente no puedo creer la suerte q tuve de poder conocerte</div>
+      </div>
+
+      <!-- Slide 6 -->
+      <div class="slide slide-6">
+        <div class="pe">🌙</div>
+        <div class="ph">y por eso</div>
+      <img src="WhatsApp Image 2026-02-12 at 22.56.16.jpeg" alt="Special moment" class="slide-img">
+    
+        <div class="pt">me pase un ratote haciendo esto, se que mereces mas, y te juro que si me dejas te dare todo</div>
+      </div>
+
+      <!-- Slide 7: Final -->
+      <div class="slide slide-7">
+        <div class="pe">🌹</div>
+        <div class="ph">me gustas y t quiero</div>
+        <div class="pt">dale al boton pa continuar</div>
+      </div>
+
+    </div>
+
+    <!-- Navigation dots -->
+    <div class="dots-container" id="dots-container">
+      <div class="dot active" onclick="goToSlide(0)"></div>
+      <div class="dot" onclick="goToSlide(1)"></div>
+      <div class="dot" onclick="goToSlide(2)"></div>
+      <div class="dot" onclick="goToSlide(3)"></div>
+      <div class="dot" onclick="goToSlide(4)"></div>
+      <div class="dot" onclick="goToSlide(5)"></div>
+      <div class="dot" onclick="goToSlide(6)"></div>
+      <div class="dot" onclick="goToSlide(7)"></div>
+    </div>
+
+    <div class="slide-controls" id="slide-ctrl">
+      <button class="sbtn" id="prev-btn" disabled>◀ Anterior</button>
+      <span id="slide-ind">1 / 8</span>
+      <button class="sbtn" id="next-btn">Siguiente ▶</button>
+    </div>
+
+    <button id="proceed-btn" onclick="goToHeart()">Continúa... 💌</button>
+
+  </div><!-- /#s1 -->
+
+
+  <!-- ================================================================
+       SECTION 2 — 3D HEART
+  ================================================================ -->
+  <div class="section hidden" id="s2">
+    <canvas id="heart-canvas"></canvas>
+    <div id="heart-overlay"></div>
+
+    <div class="heart-ui">
+      <div class="heart-q">dime si si parece un corazon pq neta no tienes idea de como me costo hacer esto</div>
+      <div class="heart-hint">aleja con la ruedita</div>
+    </div>
+    <div class="heart-progress">
+      <div class="heart-progress-bar">
+        <div class="heart-progress-fill" id="heart-prog"></div>
+      </div>
+      <div class="heart-progress-label">aléjate para revelar</div>
+    </div>
+  </div>
+
+
+  <!-- ================================================================
+       SECTION 3 — YES / NO
+  ================================================================ -->
+  <div class="section hidden" id="s3">
+    <div class="yesno-card" id="main-card">
+      <span class="yn-hearts">💗</span>
+      <div class="yn-q">Quieres ser mi san valentin?</div>
+      <div class="yn-sub">no importa si ahorita no estoy contigo, vale la pena cada momento q estemos juntos</div>
+      <div class="yn-btns">
+        <button id="yes-btn" onclick="sayYes()">Sí </button>
+        <button id="no-btn">No (arra ps)</button>
+      </div>
+    </div>
+    <div id="celebration">
+      <span class="cel-emoji">🎉</span>
+      <div class="cel-text">bna ekeccion la neta</div>
+      <div class="cel-sub">Feliz 14 de febrero, dime si esto fue muy cursi ajajjaja</div>
+    </div>
+  </div>
+
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script>
+  /* ================================================================
+     FLOATING HEARTS
+  ================================================================ */
+  (function(){
+    var bg = document.getElementById('hearts-bg');
+    var chars = ['❤️','💕','💗','💖','💝','🌸','✨','🌹'];
+    for(var i=0;i<22;i++){
+      var h=document.createElement('div'); h.className='hp';
+      h.textContent=chars[Math.floor(Math.random()*chars.length)];
+      h.style.left=(Math.random()*100)+'%';
+      h.style.fontSize=(0.7+Math.random()*1.1)+'rem';
+      h.style.animationDuration=(9+Math.random()*13)+'s';
+      h.style.animationDelay=(Math.random()*12)+'s';
+      bg.appendChild(h);
+    }
+  })();
+
+  /* ================================================================
+     BACKGROUND MUSIC CONTROL
+  ================================================================ */
+  var bgMusic = document.getElementById('bgMusic');
+  var musicToggle = document.getElementById('music-toggle');
+  var musicPlaying = false;
+
+  // Set initial volume (0.0 to 1.0)
+  bgMusic.volume = 0.5;
+
+  musicToggle.addEventListener('click', function() {
+    if (musicPlaying) {
+      bgMusic.pause();
+      musicToggle.textContent = '🔇';
+      musicToggle.classList.add('muted');
+      musicToggle.title = 'Click to play music';
+      musicPlaying = false;
+    } else {
+      bgMusic.play().catch(function(err) {
+        console.log('Audio play failed:', err);
+        alert('No se pudo reproducir la música. Asegúrate de haber agregado el archivo de audio.');
+      });
+      musicToggle.textContent = '🔊';
+      musicToggle.classList.remove('muted');
+      musicToggle.title = 'Click to pause music';
+      musicPlaying = true;
+    }
+  });
+
+  // Auto-play attempt on first user interaction
+  document.addEventListener('click', function() {
+    if (!musicPlaying && bgMusic.paused) {
+      bgMusic.play().then(function() {
+        musicToggle.textContent = '🔊';
+        musicToggle.classList.remove('muted');
+        musicPlaying = true;
+      }).catch(function(err) {
+        console.log('Auto-play prevented:', err);
+      });
+    }
+  }, { once: true });
+
+  /* ================================================================
+     SECTION TRANSITIONS
+  ================================================================ */
+  var hasAnimatedYesNo = false; // FIX: Track if we've already animated
+
+  function showSection(id){
+    document.querySelectorAll('.section').forEach(function(s){
+      s.classList.remove('visible'); s.classList.add('hidden');
+    });
+    document.getElementById(id).classList.remove('hidden');
+    document.getElementById(id).classList.add('visible');
+  }
+  function goToHeart(){ showSection('s2'); initHeart(); }
+  function goToYesNo(){
+    showSection('s3');
+    
+    // FIX: Only animate the card once
+    if (!hasAnimatedYesNo) {
+      var card = document.getElementById('main-card');
+      card.classList.add('animated');
+      hasAnimatedYesNo = true;
+    }
+  }
+
+  /* ================================================================
+     SLIDESHOW — Smooth fade transitions
+  ================================================================ */
+  var currentSlide = 0;
+  var totalSlides = 8;
+
+  function updateSlideshow(){
+    // Update slides
+    var slides = document.querySelectorAll('.slide');
+    slides.forEach(function(slide, index){
+      if(index === currentSlide){
+        slide.classList.add('active');
+      } else {
+        slide.classList.remove('active');
+      }
+    });
+
+    // Update dots
+    var dots = document.querySelectorAll('.dot');
+    dots.forEach(function(dot, index){
+      if(index === currentSlide){
+        dot.classList.add('active');
+      } else {
+        dot.classList.remove('active');
+      }
+    });
+
+    // Update controls
+    document.getElementById('prev-btn').disabled = currentSlide <= 0;
+    document.getElementById('next-btn').disabled = currentSlide >= totalSlides - 1;
+    document.getElementById('slide-ind').textContent = (currentSlide + 1) + ' / ' + totalSlides;
+
+    // Show proceed button on last slide
+    if(currentSlide >= totalSlides - 1){
+      document.getElementById('proceed-btn').style.display = 'block';
+      document.getElementById('slide-ctrl').style.opacity = '0.5';
+    } else {
+      document.getElementById('proceed-btn').style.display = 'none';
+      document.getElementById('slide-ctrl').style.opacity = '1';
+    }
+  }
+
+  function nextSlide(){
+    if(currentSlide < totalSlides - 1){
+      currentSlide++;
+      updateSlideshow();
+    }
+  }
+
+  function prevSlide(){
+    if(currentSlide > 0){
+      currentSlide--;
+      updateSlideshow();
+    }
+  }
+
+  function goToSlide(index){
+    currentSlide = index;
+    updateSlideshow();
+  }
+
+  document.getElementById('next-btn').addEventListener('click', nextSlide);
+  document.getElementById('prev-btn').addEventListener('click', prevSlide);
+
+  // Keyboard navigation
+  document.addEventListener('keydown', function(e){
+    if(document.getElementById('s1').classList.contains('visible')){
+      if(e.key === 'ArrowRight') nextSlide();
+      if(e.key === 'ArrowLeft') prevSlide();
+    }
+  });
+
+  updateSlideshow();
+
+  /* ================================================================
+     3D HEART — IMPROVED GEOMETRY WITH VARIABLES ⬇️⬇️⬇️
+  ================================================================ */
+  var heartInited   = false;
+  var heartScene, heartCamera, heartRenderer, heartMesh;
+  var heartZoom     = 0.35;
+  var START_ZOOM    = 0.35;
+  var FULL_ZOOM     = 5.2;
+  var TRIGGER_ZOOM  = 4.8;
+  var MAX_ZOOM      = 6.0;
+  var transitioning = false;
+
+  // ========================================
+  // 🔧 ADJUST THESE VARIABLES TO CHANGE THE HEART SHAPE
+  // ========================================
+  var heartParams = {
+    scale: 1.0,           // Overall size
+    bottomY: -1.0,        // Bottom point position
+    heartWidth: 1.0,      // Width of the heart
+    lobeSize: 0.5,        // Size of top bumps
+    lobeHeight: 0.6,      // Height of top bumps
+    centerDip: 0.2,       // Dip between bumps
+    sideCurve: 0.5,       // How much sides curve
+    bottomCurve: 0.3      // Bottom curve smoothness
+  };
+
+  // ⭐ THIS FUNCTION DEFINES THE HEART SHAPE ⭐
+  function createHeartShape() {
+    var shape = new THREE.Shape();
+    
+    var s = heartParams.scale;
+    var w = heartParams.heartWidth;
+    var by = heartParams.bottomY;
+    var lobe = heartParams.lobeSize;
+    var lobeH = heartParams.lobeHeight;
+    var dip = heartParams.centerDip;
+    var sideC = heartParams.sideCurve;
+    var botC = heartParams.bottomCurve;
+    
+    // Start at bottom point
+    shape.moveTo(0, by * s);
+    
+    // RIGHT SIDE - Bottom to middle
+    shape.bezierCurveTo(
+      botC * w * s, by * s,           // Control 1: smooth curve from bottom
+      w * s * 0.9, (by + 0.5) * s,    // Control 2: moving up and right
+      w * s, 0                         // End point: right middle
+    );
+    
+    // RIGHT SIDE - Middle to top lobe
+    shape.bezierCurveTo(
+      w * s, lobeH * s * sideC,       // Control 1: curving upward
+      w * s * 0.8, lobeH * s,         // Control 2: approaching top
+      lobe * w * s, lobeH * s         // End point: right lobe peak
+    );
+    
+    // RIGHT LOBE - Top curve
+    shape.bezierCurveTo(
+      lobe * w * s * 0.7, lobeH * s,      // Control 1: rounding the lobe
+      lobe * w * s * 0.4, lobeH * s * 0.9, // Control 2: coming down
+      0, (lobeH - dip) * s                 // End point: center dip
+    );
+    
+    // LEFT LOBE - Top curve (mirror)
+    shape.bezierCurveTo(
+      -lobe * w * s * 0.4, lobeH * s * 0.9, // Control 1: going up
+      -lobe * w * s * 0.7, lobeH * s,       // Control 2: rounding the lobe
+      -lobe * w * s, lobeH * s              // End point: left lobe peak
+    );
+    
+    // LEFT SIDE - Top lobe to middle
+    shape.bezierCurveTo(
+      -w * s * 0.8, lobeH * s,        // Control 1: moving away from lobe
+      -w * s, lobeH * s * sideC,      // Control 2: curving downward
+      -w * s, 0                        // End point: left middle
+    );
+    
+    // LEFT SIDE - Middle to bottom
+    shape.bezierCurveTo(
+      -w * s * 0.9, (by + 0.5) * s,   // Control 1: moving down and left
+      -botC * w * s, by * s,          // Control 2: smooth curve to bottom
+      0, by * s                        // End point: back to bottom
+    );
+    
+    return shape;
+  }
+
+  function initHeart(){
+    if(heartInited) return;
+    heartInited = true;
+
+    var canvas = document.getElementById('heart-canvas');
+    heartScene  = new THREE.Scene();
+    heartScene.background = new THREE.Color(0x0a0010);
+
+    heartCamera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.01, 1000);
+    heartCamera.position.z = heartZoom;
+
+    heartRenderer = new THREE.WebGLRenderer({canvas:canvas, antialias:true});
+    heartRenderer.setSize(window.innerWidth, window.innerHeight);
+    heartRenderer.setPixelRatio(window.devicePixelRatio);
+
+    // Create heart geometry using the improved shape
+    var heartShape = createHeartShape();
+    
+    // ========================================
+    // 🔧 ADJUST THESE EXTRUDE SETTINGS TO CHANGE 3D DEPTH
+    // ========================================
+    var geo = new THREE.ExtrudeGeometry(heartShape, {
+      depth: 0.5,           // How thick the heart is (front to back)
+      bevelEnabled: true,   // Rounded edges
+      bevelSegments: 8,     // Smoothness of rounded edges
+      steps: 3,             // Segments along the depth
+      bevelSize: 0.12,      // Size of the rounded edge
+      bevelThickness: 0.1   // How much the edge extends
+    });
+    geo.center();
+
+    // ========================================
+    // 🔧 ADJUST MATERIAL PROPERTIES FOR DIFFERENT LOOK
+    // ========================================
+    var mat = new THREE.MeshPhongMaterial({
+      color: 0xe63946,        // Main heart color (red)
+      emissive: 0x6d0020,     // Glow color (dark red)
+      shininess: 130,         // How shiny (0-200)
+      specular: 0xff9abe,     // Highlight color (pink)
+      flatShading: false      // Smooth or faceted look
+    });
+    
+    heartMesh = new THREE.Mesh(geo, mat);
+    heartScene.add(heartMesh);
+
+    // Lighting
+    heartScene.add(new THREE.AmbientLight(0xff6b9d, 0.6));
+    var pl1 = new THREE.PointLight(0xff4d72, 2.5, 25);
+    pl1.position.set(5, 5, 5);
+    heartScene.add(pl1);
+    
+    var pl2 = new THREE.PointLight(0xffc8dd, 1.8, 25);
+    pl2.position.set(-5, -5, 3);
+    heartScene.add(pl2);
+
+    var pl3 = new THREE.PointLight(0xff9abe, 1.2, 20);
+    pl3.position.set(0, 5, -3);
+    heartScene.add(pl3);
+
+    // Stars
+    var sg = new THREE.BufferGeometry();
+    var sp = new Float32Array(350 * 3);
+    for(var i=0; i<350; i++){
+      sp[i*3] = (Math.random() - 0.5) * 55;
+      sp[i*3+1] = (Math.random() - 0.5) * 55;
+      sp[i*3+2] = (Math.random() - 0.5) * 55;
+    }
+    sg.setAttribute('position', new THREE.BufferAttribute(sp, 3));
+    var stars = new THREE.Points(sg, new THREE.PointsMaterial({
+      color: 0xff9abe,
+      size: 0.09,
+      transparent: true,
+      opacity: 0.65
+    }));
+    heartScene.add(stars);
+
+    // Animation loop
+    var t = 0;
+    function animate(){
+      requestAnimationFrame(animate);
+      t += 0.012;
+
+      heartCamera.position.z += (heartZoom - heartCamera.position.z) * 0.06;
+
+      heartMesh.rotation.y += 0.009;
+      heartMesh.position.y = Math.sin(t) * 0.18;
+      heartMesh.scale.setScalar(1 + Math.sin(t * 1.4) * 0.03);
+      stars.rotation.y += 0.0006;
+      heartRenderer.render(heartScene, heartCamera);
+
+      if(!transitioning && heartCamera.position.z > TRIGGER_ZOOM){
+        transitioning = true;
+        triggerHeartTransition();
+      }
+    }
+    animate();
+
+    // Mouse drag
+    var drag = false, px = 0, py = 0;
+    canvas.addEventListener('mousedown', function(e){
+      drag = true;
+      px = e.clientX;
+      py = e.clientY;
+    });
+    window.addEventListener('mouseup', function(){ drag = false; });
+    window.addEventListener('mousemove', function(e){
+      if(!drag) return;
+      heartMesh.rotation.y += (e.clientX - px) * 0.012;
+      heartMesh.rotation.x += (e.clientY - py) * 0.006;
+      px = e.clientX;
+      py = e.clientY;
+    });
+
+    // Wheel zoom
+    var s2el = document.getElementById('s2');
+    s2el.addEventListener('wheel', function(e){
+      e.preventDefault();
+      if(transitioning) return;
+      heartZoom += e.deltaY * 0.008;
+      heartZoom = Math.max(START_ZOOM, Math.min(FULL_ZOOM, heartZoom));
+      updateProgress();
+    }, {passive: false});
+
+    // Touch zoom
+    var ty = 0;
+    s2el.addEventListener('touchstart', function(e){
+      ty = e.touches[0].clientY;
+    });
+    s2el.addEventListener('touchmove', function(e){
+      e.preventDefault();
+      if(transitioning) return;
+      var dy = e.touches[0].clientY - ty;
+      heartZoom += dy * 0.015;
+      heartZoom = Math.max(START_ZOOM, Math.min(FULL_ZOOM, heartZoom));
+      ty = e.touches[0].clientY;
+      updateProgress();
+    }, {passive: false});
+
+    function updateProgress(){
+      var pct = (heartZoom - START_ZOOM) / (TRIGGER_ZOOM - START_ZOOM) * 100;
+      pct = Math.min(100, Math.max(0, pct));
+      var bar = document.getElementById('heart-prog');
+      if(bar) bar.style.width = pct + '%';
+    }
+
+    window.addEventListener('resize', function(){
+      heartCamera.aspect = window.innerWidth / window.innerHeight;
+      heartCamera.updateProjectionMatrix();
+      heartRenderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  }
+
+  function triggerHeartTransition(){
+    heartZoom = MAX_ZOOM;
+
+    setTimeout(function(){
+      var overlay = document.getElementById('heart-overlay');
+      overlay.classList.add('zooming');
+
+      setTimeout(function(){
+        goToYesNo();
+        setTimeout(function(){
+          overlay.classList.remove('zooming');
+          heartZoom = START_ZOOM;
+          transitioning = false;
+        }, 800);
+      }, 700);
+    }, 300);
+  }
+
+  /* ================================================================
+     YES / NO
+  ================================================================ */
+  function sayYes(){
+    document.getElementById('main-card').style.display = 'none';
+    document.getElementById('celebration').classList.add('show');
+    launchConfetti();
+  }
+
+  var noBtn = document.getElementById('no-btn');
+  noBtn.addEventListener('mouseover', function(){
+    var card = document.getElementById('main-card');
+    var mx = card.offsetWidth - noBtn.offsetWidth - 30;
+    var my = card.offsetHeight - noBtn.offsetHeight - 30;
+    noBtn.style.transform = 'translate(' + (Math.random()*mx - mx/2) + 'px,' + (Math.random()*my - my/2) + 'px)';
+  });
+
+  function launchConfetti(){
+    var colors = ['#ff6b9d','#c9184a','#ff9abe','#ffd6e7','#ff4d72','#ffb3c6'];
+    var st = document.createElement('style');
+    st.textContent = '@keyframes cFall{to{transform:translateY(110vh) rotate(720deg);opacity:0;}}';
+    document.head.appendChild(st);
+    
+    for(var i=0; i<70; i++){
+      (function(d){
+        var c = document.createElement('div');
+        c.style.cssText = 'position:fixed;'
+          + 'width:' + (5 + Math.random()*9) + 'px;'
+          + 'height:' + (5 + Math.random()*9) + 'px;'
+          + 'background:' + colors[Math.floor(Math.random()*colors.length)] + ';'
+          + 'left:' + (Math.random()*100) + 'vw;'
+          + 'top:-10px;'
+          + 'border-radius:' + (Math.random() > 0.5 ? '50%' : '3px') + ';'
+          + 'animation:cFall ' + (1.4 + Math.random()*2) + 's ease-in ' + d + 's forwards;'
+          + 'pointer-events:none;z-index:9999;';
+        document.body.appendChild(c);
+        setTimeout(function(){ c.remove(); }, (d + 3.5) * 1000);
+      })(Math.random() * 1.2);
+    }
+  }
+  </script>
+</body>
+</html>
